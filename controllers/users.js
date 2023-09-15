@@ -68,6 +68,7 @@ export const login = async (req, res) => {
     if(!emailFormat(email)) return res.status(400).json({message: "email is not valid"});
     // hash password and check if it matches with the one in the database
     const olUser = await User.findOne({ email });
+    const secret = process.env.JWT_SECRET;
     try{
         const validPassword = await bcrypt.compare(password, olUser.password);
         if (!validPassword) return res.status(400).json({ message: "password is not correct" });
@@ -75,7 +76,7 @@ export const login = async (req, res) => {
         const token =  jwt.sign({
             id: olUser._id,
             email: olUser.email,
-        }, "secretkey");
+        }, secret,);
 
         res.json({ token });
     }catch(error){

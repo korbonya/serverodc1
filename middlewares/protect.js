@@ -5,7 +5,7 @@ export const protect = async (req, res, next) => {
     if (!authorization) return res.status(401).json({ message: "you are not authorized" });
     const token = authorization.split(" ")[1];
     try {
-        const decoded = Jwt.verify(token, "secretkey");
+        const decoded = Jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     }

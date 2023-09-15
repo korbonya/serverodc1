@@ -10,8 +10,26 @@ const emailFormat = (email) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find();
-    res.json(users);
+   const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const results = {};
+    if (endIndex < (await User.countDocuments().exec())) {
+        results.next = {
+            page: page + 1,
+            limit: limit,
+        };
+        }
+        if (startIndex > 0) {
+        results.previous = {
+            page: page - 1,
+            limit: limit,
+        };
+        }
+    results.results = await User.find().limit(limit).skip(startIndex).exec();
+    res.json({currentPage: page, results});
+
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
@@ -105,12 +123,14 @@ export const getUser = async (req, res) => {
 };
 
 export const deleteUser = async (req, res) => {
+ const {user} = req;
   const { id } = req.params;
+  console.log(user);
   if (!mongoose.Types.ObjectId.isValid(id))
     return res.status(404).send(`No user with id: ${id}`);
   try {
     await User.findByIdAndDelete(id);
-    res.json({ message: "User deleted successfully." });
+    res.json({ message: "User deleted successfully.", user });
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
